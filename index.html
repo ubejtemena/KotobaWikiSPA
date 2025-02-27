@@ -1,0 +1,368 @@
+<!DOCTYPE HTML>
+<html lang="sk">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css" media="all">
+    <link rel="icon" href="fig/titleicon.svg">
+
+    <title>KotobaWiki SPA</title>
+</head>
+
+<body>
+
+    <script src="https://accounts.google.com/gsi/client"></script>
+
+    <div class="topbar">
+        <nav class="mainnavleft">
+            <a href="#welcome">Welcome</a>
+            <a href="#main/1">Articles</a>
+            <a href="#artInsert">Add article</a>
+        </nav>
+        <header>
+            <h1>KotobaWiki <img class="cat" src="fig/cat.svg" alt=""> <span class="namearticles">Articles</span></h1>
+        </header>
+        <nav class="mainnavright">
+            <a href="#opinions">Opinions</a>
+            <a href="#addOpinion">Add your opinion</a>
+            </nav>
+            <div class="GoogleProfile">
+                <div id="g_id_onload"
+                data-client_id="941435115438-shdccfc92f1k86r67me71mvhjr8u350g.apps.googleusercontent.com"
+                data-context="signin"
+                data-ux_mode="popup"
+                data-callback="handleCredentialResponse"
+                data-auto_prompt="false">
+            </div>
+            
+            <div class="g_id_signin"
+                data-type="text"
+                data-shape="rectangular"
+                data-theme="filled_black"
+                data-text="signinhere"
+                data-size="large"
+                data-locale="en-US"
+                data-logo_alignment="left">
+            </div>
+            
+            <div id="miniProfile">
+                <img src="nothing" id="userImage" alt="Profile Picture">
+                <p id="userName"></p>
+                <button id="signOutBtn" onclick="signOut()">Sign Out</button>
+            </div>
+    </div>
+</div>
+
+
+
+
+    <div id="m"></div>
+    <main class="resp" id="router-view">
+    </main>
+
+
+
+    <script id="template-welcome" type="text/template">
+        <div style="display:flex; flex-direction:column; align-items: center;">
+        <h2>Welcome!</h2>
+        <p class="welcometext">
+            Read some articles for <strong style="color:#ab71ff;">free!</strong>
+        </p>
+            <p>Original website: <a target="_blank" href="https://ubejtemena.github.io/KotobaWiki/">KotobaWiki</a></p>
+            <img style="max-width:400px" src="fig/titleicon.svg" alt="">
+        </div>
+    
+</script>
+
+    <script id="template-main" type="text/template">
+
+                <p class="pagecount">
+                    {{currPage}}/{{pageCount}}
+                </p>
+                <nav class="switchpages">
+                    {{#prevPage}}
+                    <a id="decrement-count" href="#main/{{prevPage}}/{{pageCount}}"><<-PREV </a>
+                    {{/prevPage}}
+                    {{#nextPage}}
+                    <a id="increment-count" href="#main/{{nextPage}}/{{pageCount}}"> NEXT->> </a>
+                    {{/nextPage}}
+                </nav>
+
+</script>
+
+
+
+<script id="template-articles" type="text/template">
+    <div id="findArt">
+        <div class="findform">
+            <input type="text" class="form__field" id="tag" placeholder=" Manga, Game, Manhwa..." name="tag" required>
+            <a href="#findArtbyTag" class="findTag" id="findArtbyTag">Find</a>
+        </div>
+    </div>
+            
+            
+            <div class="articles">
+                {{#articles}}
+                <a href="{{detailLink}}">
+                <article class="onearticle">
+                    
+                    <h2>{{title}}</h2>
+                    <p style="margin-top:-2%; margin-bottom: 6  %; color: gray; opacity: 0.7;">
+                        by {{author}}
+                    </p>
+                    <div style="color: lightgray; font-size: 1rem; text-align:left; margin-left: 3%; margin-right: 3%;">
+                        {{content}}
+                    </div>
+                </article>
+                </a>
+                {{/articles}}
+            </div>
+</script>
+
+
+    <script id="template-articles-error" type="text/template">
+    <article>
+        <h2>Article(s) acquisition failed</h2>
+        <p>
+            {{errMessage}}
+        </p>
+    </article>
+     
+</script>
+
+
+
+    <script id="template-opinions" type="text/template">
+        <article> 
+            <h2 style="color: rgba(111, 87, 167, 0.637);" id="artOpinions">They say..</h2>
+
+            <div id="opinionsContainer">
+                {{#.}}
+                <section>
+                    <h3 style="color:#D397F8; font-size: 1.5rem;">{{name}} </h3> 
+                    <p><span class="label">Said: </span> {{comment}}</p>
+                    <p><img style="max-width: 250px; max-height: 250px;" src={{image_url}}></p>
+                    <p><span class="label">Kw:</span> {{keywords}}</p>
+                    <p style="color:gray; opacity: 0.4; padding-bottom: 20px; border-bottom: #dbdbdd outset 1px;"><span>{{created}}</span></p>
+                </section>
+                {{/.}}
+                {{^.}}
+                <section>
+                    Sorry, no opinions found.
+                </section>
+                {{/.}}
+            </div>
+        
+    </article>
+</script>
+
+
+
+
+    <script id="template-addOpinion" type="text/template">
+        
+        <div style="text-align:center;">
+        <h2>Your Opinion</h2>
+        <p style="color:gray;">
+            Please, use the form below to state your opinion about this page.
+        </p>
+        </div>
+        <form method="POST" action="#" id="opnFrm">
+            <fieldset style="width: 30%; display:flex; flex-direction:column; align-items:center;">
+                <legend>Some info about you</legend>
+                <div>
+                    <label for="nameElm">Name:</label>
+                    <input style="padding: 5px;" type="text" id="nameElm" name="name" required>
+                </div>
+                <div>
+                    <label for="email">Email:</label>
+                    <input style="padding: 5px;" type="email" id="email" name="email" placeholder="...@..." required>
+                </div>
+                <div>
+                    <label for="image_url">URL:</label>
+                    <input style="padding: 5px;" type="url" id="image_url" placeholder="Add photo" name="image_url">
+                </div>
+            </fieldset>
+            <fieldset>
+                <legend> Comment</legend>
+                <div>
+                    
+                    <textarea id="opnElm" name="opinion" rows="5" cols="40" placeholder="Type.." required></textarea>
+                </div>
+            </fieldset>
+                <fieldset>
+                    <legend>Keywords</legend>
+                <input style="padding: 3px;" type="text" id="keywords" name="keywords" list="keywordlist" placeholder="e.g. Manga, Manhwa..">
+                <datalist id="keywordlist">
+                    <option value="Universe">
+                    <option value="Game">
+                    <option value="Novel">
+                    <option value="Manhwa">
+                    <option value="Manga">
+                </datalist>
+            </fieldset>
+            <div style="display:flex; justify-content:space-between; width: 25%; margin-top:1%;">
+                <button class="sendresetbtns" type="reset">Reset</button>
+                <button class="sendresetbtns" type="submit">Send</button>
+            </div>
+        </form>
+    
+</script>
+
+
+
+
+    <script id="template-article" type="text/template">
+        <div style="margin-left: 5%; margin-bottom:3%; margin-top:3%;">
+        <a href="{{backLink}}"><< Back</a>
+            <article>
+    
+                <h3 style="font-size: 2em; color:#D397F8;">{{title}}</h3>
+                <p style="color: lightgray; opacity: 0.7;">
+                    by {{author}}
+                </p>
+                {{#imageLink}}
+                <div>
+                <figure style="float: left; margin-left:5px;">
+                    <img style="max-width: 350px; max-height:350px" src="{{imageLink}}" alt="article figure">
+                </figure>
+                {{/imageLink}}
+                <div style="overflow-wrap:anywhere; width: 100ch; font-size: 1.15rem;">{{{content}}}</div>
+            </div>
+            </article>
+            <p></p>
+            <h3 style="margin-bottom:3%; font-size:1.3rem; clear:left;">Comments:</h3>
+            {{#JSONComments}}
+            {{#comments}}
+            <div class="article-comment-section">
+                <div class="article-comment">
+                    <h4 style="font-size:1.3em; color:#D397F8;">{{author}}</h4>
+                    <p style="margin-left: 1%; color: lightgray; font-size:medium;">{{text}}</p>
+                    <br>
+                    <div style="opacity:0.3;padding-bottom: 20px; border-bottom: #dbdbdd outset 1px;">Date: {{dateCreated}}</div>  
+                    
+                </div>
+            </div>
+            {{/comments}}
+            {{/JSONComments}}
+            <p></p>
+            <p></p>
+
+        
+            
+                <form id="articleForm3">
+    
+                        <div>
+                            <h3 >New comment</h3>
+                        </div>
+                        
+                            <div>
+                                <label style="font-size: 1.15rem;" for="author"> <span> Author: </span> </label>
+                                <input style="padding:4px; margin-bottom: 2%;" type="text" name="author" id="author3" size="25" maxlength="100" placeholder="">
+                            </div>
+                        
+                            
+                                <div>
+                                    <label style="font-size: 1.15rem;" for="title"><span> Comment: </span></label>
+                                    <input style="padding:15px;" type="text" name="title" id="title3" size="50" maxlength="100"
+                                            pattern="\S[\S\s]*" placeholder="e.g. Good.">
+                                            
+                                            <a href="{{addComm}}"> Comment </a>
+                    
+                                </div>
+                            
+                       
+                </form>
+            
+            <footer style="display: flex;
+            justify-content: space-between;
+            width: 200px; margin-top:3%;">
+                <a href="{{editLink}}">Edit</a>
+                <a href="{{deleteLink}}">Delete</a>
+            </footer>
+        </div>
+</script>
+
+
+
+
+    <script id="template-article-form" type="text/template">
+    
+    <article>
+        <div>
+            <br>
+            <a href="{{backLink}}"><< Back</a>
+        </div>    
+        
+        <h2 style="text-align:center;">{{formTitle}}</h2>
+
+        <form id="articleForm">
+            <div>
+            <label for="author">Author:</label>
+            <input style="padding: 5px;" type="text" name="author" id="author" value="{{author}}" size="30" 
+                   title="Article author, max. length 100 characters." 
+                   maxlength="100" placeholder="Made by... " >
+            </div>
+            <div>
+            <label for="title">Title:</label>
+            <input style="padding: 5px;" type="text" name="title" id="title" value="{{title}}" size="40"  
+                   maxlength="100" pattern="\S[\S\s]*" placeholder="e.g. My story." required 
+                   title="Article title, mandatory item, max. length: 100 characters. The first character must not be a space."  >
+                </div>
+            <label for="content">Article body:</label>
+            <textarea
+                    name="content" id="content" spellcheck="true"  lang="en-US"
+                    cols="50" rows="10"  required
+                    title="Article content.">
+                    {{content}}
+            </textarea>
+            <label for="imageLink">Image (url):</label>
+            <div>
+            <input type="url" name="imageLink" id="imageLink" value="{{imageLink}}" size="30" 
+                   title="Image URL, max. length 100 characters." maxlength="100">
+            <button class="addfrmbtn" type="button" id="btShowFileUpload">
+                Upload image
+            </button>
+            </div>
+            Or:
+            <fieldset id="fsetFileUpload">
+                <legend>Image Upload</legend>
+                <input type="file" id="flElm" name="file" accept="image/jpeg, image/png">
+                <br >
+                <button  type="button" id="btFileUpload">
+                    Send image to server </button>
+                <button type="button" id="btCancelFileUpload">
+                    Cancel uploading </button>
+            </fieldset>
+            <br>
+            <label for="tags">Keywords:</label>
+            <input  style="padding:3px;" type="text" name="tags" id="tags" value="{{tags}}" size="20" list="keywordlist"
+                    title="Keyword list, comma separated." placeholder="e.g. manga, manhwa">
+            <datalist id="keywordlist">
+                <option value="Universe">
+                <option value="Game">
+                <option value="Novel">
+                <option value="Manhwa">
+                <option value="Manga">
+            </datalist>
+ 
+            <div style="display:flex; justify-content:space-between; width: 25%; margin-top:1%;">
+            <button class="sendresetbtns" type="reset"> Reset Form </button>
+            <button class="sendresetbtns" type="submit"> {{submitBtTitle}} </button>
+            </div>
+        </form>
+    </article>
+
+</script>
+
+    <footer style="color: gray; opacity: 0.5; text-align: center; margin-top: 3%; margin-bottom: 3%;">2024 Volodymyr Vulchyn. All rights reserved.</footer>
+
+
+    <script type="module" src="js/index.js"></script>
+    <script src="js/signInOut.js" defer></script>
+
+
+</body>
+
+</html>
